@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: fioneer_insurance_db
+    environment:
+      POSTGRES_USER: fioneer_admin
+      POSTGRES_PASSWORD: fioneer_password
+      POSTGRES_DB: fioneer_insurance_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fioneer_admin -d fioneer_insurance_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+

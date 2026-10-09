@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(
-        name = "insurance_packages",
+        name = "insurance_package",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_insurance_package_product_name",

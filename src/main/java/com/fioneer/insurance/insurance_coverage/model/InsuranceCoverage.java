@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Builder
 @Entity
 @Table(
-        name = "insurance_coverages",
+        name = "insurance_coverage",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_insurance_coverage_package_name",

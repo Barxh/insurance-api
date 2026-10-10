@@ -14,3 +14,9 @@ spring:
   docker:
     compose:
       lifecycle-management: start-and-stop
+
+security:
+  jwt:
+    secret: "${JWT_SECRET:45363888fe5844e136e03bd9349d197b38c1564093786447e4c13b894c78eba3}"
+    issuer: insurance-api
+    access-token-ttl: PT15M

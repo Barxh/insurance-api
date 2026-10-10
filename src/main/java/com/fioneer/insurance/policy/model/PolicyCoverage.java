@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "policy_coverages")
 public class PolicyCoverage {
 
     @Id

@@ -34,6 +34,10 @@ public class InsuranceProduct {
     @Column(length = 500)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "insurance_type", length = 30)
+    private InsuranceType insuranceType;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;

@@ -65,6 +65,15 @@ public class Policy {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToOne(mappedBy = "policy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TravelPolicyDetails travelDetails;
+
+    @OneToOne(mappedBy = "policy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PropertyPolicyDetails propertyDetails;
+
+    @OneToOne(mappedBy = "policy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private RoadsidePolicyDetails roadsideDetails;
+
     @OneToMany(
             mappedBy = "policy",
             cascade = CascadeType.ALL,
@@ -80,4 +89,5 @@ public class Policy {
     )
     @Builder.Default
     private List<PolicyCoverage> coverages = new ArrayList<>();
+
 }

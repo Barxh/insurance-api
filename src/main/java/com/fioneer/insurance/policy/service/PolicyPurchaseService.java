@@ -84,6 +84,30 @@ public class PolicyPurchaseService {
         this.roadsideRates = roadsideRates;
     }
 
+    @Transactional(readOnly = true)
+    public List<PolicyResponse> getPolicies(
+            String username,
+            Set<String> authorities
+    ) {
+        List<Policy> policiesToReturn;
+        if (authorities.contains("ROLE_AGENT")
+                || authorities.contains("ROLE_ADMIN")) {
+            policiesToReturn = policies.findAllByOrderByCreatedAtDesc();
+        } else if (authorities.contains("ROLE_CLIENT")) {
+            policiesToReturn = policies
+                    .findAllByUser_UsernameOrderByCreatedAtDesc(username);
+        } else {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You are not allowed to view policies"
+            );
+        }
+
+        return policiesToReturn.stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     @Transactional
     public PolicyResponse purchaseTravel(String username, TravelPolicyRequest request) {
         User user = findClient(username);
@@ -499,6 +523,12 @@ public class PolicyPurchaseService {
 
         return new PolicyResponse(
                 policy.getId(),
+                new PolicyResponse.PolicyHolder(
+                        policy.getUser().getId(),
+                        policy.getUser().getUsername(),
+                        policy.getUser().getFirstName(),
+                        policy.getUser().getLastName()
+                ),
                 policy.getProduct().getId(),
                 policy.getInsurancePackage().getId(),
                 policy.getPackageName(),

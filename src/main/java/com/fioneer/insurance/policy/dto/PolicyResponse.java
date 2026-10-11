@@ -12,6 +12,7 @@ import java.util.List;
 
 public record PolicyResponse(
         Long id,
+        PolicyHolder policyHolder,
         Long productId,
         Long packageId,
         String packageName,
@@ -32,7 +33,21 @@ public record PolicyResponse(
         BigDecimal vehicleAnnualPrice,
         List<InsuredPerson> insuredPeople
 ) {
-    public record InsuredPerson(String firstName, String lastName, TravelerAgeGroup ageGroup, BigDecimal dailyRate) {}
+    public record PolicyHolder(
+            Long id,
+            String username,
+            String firstName,
+            String lastName
+    ) {
+    }
+
+    public record InsuredPerson(
+            String firstName,
+            String lastName,
+            TravelerAgeGroup ageGroup,
+            BigDecimal dailyRate
+    ) {
+    }
     public record Addon(
             Long id,
             String name,

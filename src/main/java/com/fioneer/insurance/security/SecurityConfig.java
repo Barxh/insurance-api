@@ -1,7 +1,11 @@
 package com.fioneer.insurance.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.fioneer.insurance.api.error.ApiErrorResponse;
 import com.fioneer.insurance.user.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,11 +26,15 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @EnableMethodSecurity
@@ -93,8 +101,26 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            AuthenticationProvider authenticationProvider
+            AuthenticationProvider authenticationProvider,
+            ObjectMapper objectMapper
     ) throws Exception {
+        AuthenticationEntryPoint authenticationEntryPoint =
+                (request, response, exception) -> writeSecurityError(
+                        objectMapper,
+                        request,
+                        response,
+                        org.springframework.http.HttpStatus.UNAUTHORIZED,
+                        "Authentication is required or the supplied credentials are invalid"
+                );
+        AccessDeniedHandler accessDeniedHandler =
+                (request, response, exception) -> writeSecurityError(
+                        objectMapper,
+                        request,
+                        response,
+                        org.springframework.http.HttpStatus.FORBIDDEN,
+                        "You are not allowed to perform this action"
+                );
+
         return http
                 .authenticationProvider(authenticationProvider)
                 .csrf(AbstractHttpConfigurer::disable)
@@ -112,14 +138,38 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .oauth2ResourceServer(oauth2 ->
-                        oauth2.jwt(jwt ->
-                                jwt.jwtAuthenticationConverter(
+                        oauth2
+                                .authenticationEntryPoint(authenticationEntryPoint)
+                                .accessDeniedHandler(accessDeniedHandler)
+                                .jwt(jwt -> jwt.jwtAuthenticationConverter(
                                         jwtAuthenticationConverter()
-                                )
-                        )
+                                ))
                 )
                 .build();
+    }
+
+    private void writeSecurityError(
+            ObjectMapper objectMapper,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            org.springframework.http.HttpStatus status,
+            String message
+    ) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        if (status == org.springframework.http.HttpStatus.UNAUTHORIZED) {
+            response.setHeader("WWW-Authenticate", "Bearer");
+        }
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                ApiErrorResponse.of(status, message, request.getRequestURI())
+        );
     }
 
     @Bean

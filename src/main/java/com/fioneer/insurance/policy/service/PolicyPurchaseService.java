@@ -108,6 +108,25 @@ public class PolicyPurchaseService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public PolicyResponse getPolicy(
+            Long policyId,
+            String username,
+            Set<String> authorities
+    ) {
+        boolean canViewAllPolicies = authorities.contains("ROLE_AGENT")
+                || authorities.contains("ROLE_ADMIN");
+
+        Policy policy = canViewAllPolicies
+                ? policies.findById(policyId).orElseThrow(() ->
+                        policyNotFound(policyId)
+                )
+                : policies.findByIdAndUser_Username(policyId, username)
+                        .orElseThrow(() -> policyNotFound(policyId));
+
+        return toResponse(policy);
+    }
+
     @Transactional
     public PolicyResponse purchaseTravel(String username, TravelPolicyRequest request) {
         User user = findClient(username);
@@ -563,5 +582,12 @@ public class PolicyPurchaseService {
 
     private ResponseStatusException badRequest(String message) {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+    }
+
+    private ResponseStatusException policyNotFound(Long policyId) {
+        return new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Policy " + policyId + " was not found"
+        );
     }
 }

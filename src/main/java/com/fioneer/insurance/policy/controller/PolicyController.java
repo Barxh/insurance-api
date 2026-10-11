@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -39,6 +40,24 @@ public class PolicyController {
                 .collect(Collectors.toSet());
 
         return service.getPolicies(authentication.getName(), authorities);
+    }
+
+    @GetMapping("/{policyId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_CLIENT', 'ROLE_AGENT', 'ROLE_ADMIN')")
+    public PolicyResponse getPolicy(
+            @PathVariable Long policyId,
+            Authentication authentication
+    ) {
+        Set<String> authorities = authentication.getAuthorities()
+                .stream()
+                .map(authority -> authority.getAuthority())
+                .collect(Collectors.toSet());
+
+        return service.getPolicy(
+                policyId,
+                authentication.getName(),
+                authorities
+        );
     }
 
     @PostMapping("/travel")

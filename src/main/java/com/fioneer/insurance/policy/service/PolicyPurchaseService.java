@@ -451,7 +451,9 @@ public class PolicyPurchaseService {
         int day = Integer.parseInt(jmbg.substring(0, 2));
         int month = Integer.parseInt(jmbg.substring(2, 4));
         int yearDigits = Integer.parseInt(jmbg.substring(4, 7));
-        int year = (yearDigits >= 900 ? 1900 : 2000) + yearDigits;
+        int year = yearDigits >= 900
+                ? yearDigits + 1000
+                : yearDigits + 2000;
 
         try {
             return LocalDate.of(year, month, day);
